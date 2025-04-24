@@ -11,9 +11,11 @@ Hypotropia (eye turns downward)
 
 These functionalities serve as the foundation for personalized diagnosis and recommendation within the Oculus system.
 
+The dataset was extracted from the Roboflow website: https://universe.roboflow.com/strabismus/strabismus-gjnif
 ## Contents
-### Data
-
-
-
 ### Data Analysis and Feature Engineering
+
+
+
+
+### Computer Vision Model
