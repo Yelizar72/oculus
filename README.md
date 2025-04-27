@@ -31,6 +31,8 @@ The dataset was extracted from the Roboflow website: https://universe.roboflow.c
     - `_classes.csv`  
 
 </details>
+![output (5)](https://github.com/user-attachments/assets/768a748d-ca78-46de-bff8-3e073152fc40)
+
 
 
 ### Data Preprocessing
