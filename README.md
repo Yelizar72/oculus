@@ -31,8 +31,26 @@ The dataset was extracted from the Roboflow website: https://universe.roboflow.c
     - `_classes.csv`  
 
 </details>
-![output (5)](https://github.com/user-attachments/assets/768a748d-ca78-46de-bff8-3e073152fc40)
 
+#### Overall Class Distribution Analysis
+The dataset is close to balanced across the four strabismus sub-types (≈ 17-23 % each), while the NORMAL class is slightly smaller (≈ 19 %). Every record carries exactly one active label, so there is no multi-labelling noise, and the bar-chart confirms the visual balance.
+
+#### Binary Imbalance Check
+When collapsed to a two-class task, strabismus outnumbers normal ≈ 4 : 1 in every split. Mitigate this by applying class-weights or focal loss in the binary gate, or by oversampling NORMAL images during training.
+
+#### Image Size & Format Check
+All files share the same resolution (640 × 320, aspect 2 : 1) and are stored as .jpg. No duplicate images were detected by MD5 hashes. The uniform size simplifies resizing to 299 × 299 without large interpolation artefacts.
+
+#### Basic Brightness Evaluation
+A random sample (200 images) shows a mean pixel value of 127 ± 26 (0–255 BGR), approximating a normal distribution with no extreme exposures. Standard preprocess normalisation is sufficient; CLAHE is unnecessary.
+
+#### Colour-Bias Check
+Scleral hue is tightly clustered (≈ 50-62°) across all classes, signalling no colour bias in the “white of the eye.” Iris hue shows a tentative shift: ESOTROPIA/EXOTROPIA/NORMAL ≈ 60°, HYPER/HYPO ≈ 110-123°, but the sample size for iris masks is tiny (15-17 measurements max). Should add hue-jitter during training and monitor Grad-CAM to ensure the network learns geometry rather than subtle colour cues.
+
+#### Overall Conclusions and Training Recommendations
++ Binary gate – weight ratio ≈ 4 : 1
++ Augmentation – horizontal flip, ±10° rotation, brightness/contrast jitter preserve clinical validity.
++ Cross-validation – stratified K-fold on the 5-column one-hot matrix gives robust estimates for a 700-image dataset
 
 
 ### Data Preprocessing
