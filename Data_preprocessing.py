@@ -20,7 +20,6 @@ EYE_BOX = [33, 133, 362, 263]  # Eye corners indices
 
 # Eye ROI extraction
 def extract_eye_roi(img: np.ndarray) -> np.ndarray:
-    """Crop around the eye rectangle with 10% padding, fallback to center crop if no face found."""
     h, w = img.shape[:2]
     res = face_mesh.process(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     if not res.multi_face_landmarks:
@@ -37,7 +36,6 @@ def extract_eye_roi(img: np.ndarray) -> np.ndarray:
 
 # CSV loader
 def load_split(split_dir: str):
-    """Load filenames and one-hot labels from split directory."""
     csv_path = os.path.join(split_dir, "_classes.csv")
     df = pd.read_csv(csv_path)
     df.columns = df.columns.str.strip()
