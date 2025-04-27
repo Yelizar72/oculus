@@ -73,3 +73,60 @@ To enhance model generalization and reduce overfitting, optional real-time data 
 After preprocessing, image tensors and their corresponding labels (depending on the mode: binary classification, 4-type classification, or multitask) are combined into a tf.data.Dataset. The dataset pipeline supports optional shuffling (for randomized batches), batching (mini-batches of a configurable size, e.g., 32), real-time augmentation, and prefetching (loading future batches in the background). This design ensures efficient and scalable data loading for training and evaluation.
 
 ### Computer Vision Model
+
+#### Defining Hyperparameters
+Sets the key training hyperparameters:
++ BATCH_SIZE, EPOCHS, LEARNING_RATE: Training configuration.
++ INPUT_SHAPE: The input image shape expected by the model.
++ LOSS_ALPHA, LOSS_GAMMA: Focal loss parameters to handle class imbalance.
++ LOSS_TYPE_WEIGHT: Weight assigned to the 4-class head loss relative to the binary head.
+
+#### Data Preparation
+Calls build_all_datasets() to load train, val, and test datasets as TensorFlow pipelines.
+Augmentation and oversampling (for NORMAL class) are applied automatically.
+Also computes binary class weights (NORMAL vs STRABISMUS) from training data using compute_binary_class_weights(), to balance classes during loss calculation.
+
+#### Model Construction
+The model architecture:
+- EfficientNetV2S is used as a feature extractor backbone (include_top=False) with pretrained ImageNet weights.
+- A GlobalAveragePooling2D and Dropout layer are added for regularization.
+- Two outputs (heads) are built:  
+  **binary_head**: A sigmoid output predicting strabismus presence (binary classification).  
+  **type_head**: A softmax output predicting the 4 strabismus sub-types (multi-class classification).  
+  Both heads share the same base encoder.
+
+#### Custom Multi-Task Loss Function
+Defines multitask_loss():
++ Binary head uses Sigmoid Focal Loss to address class imbalance (rare NORMAL samples).
++ Type head uses Categorical Cross-Entropy Loss, masked by strabismus presence (only contribute when positive strabismus).
++ Both losses are combined, with the type loss scaled by LOSS_TYPE_WEIGHT.
+
+This ensures the model prioritizes detecting strabismus, while still learning to classify subtypes when applicable.
+
+#### Model Compilation
+The model is compiled with:
++ Adam optimizer
++ The custom multitask loss function
+Metrics:
++ Recall and AUC for binary output (important due to dataset skew).
++ Categorical Accuracy for sub-type classification.
+
+#### Setting Up Callbacks
+Three callbacks are configured:
++ ModelCheckpoint: Save the best model based on val_binary_head_recall.
++ EarlyStopping: Stop training early if recall doesn't improve for 5 epochs.
++ ReduceLROnPlateau: Reduce learning rate if val_binary_head_auc plateaus.
+
+These callbacks help optimize convergence and avoid overfitting.
+
+#### Manual Evaluation: F1 Score and Classification Report
+Predictions:
++ Collects model predictions for binary and multi-class outputs across the test dataset.
+F1 Score (binary):
++ Calculates the F1-score for strabismus vs normal classification using f1_score().
+Classification Report (sub-types):
++ Generates a detailed precision, recall, and F1-score report for each of the 4 subtypes (classification_report()).
+Keras Evaluation:
++ Additionally prints standard evaluation metrics using model.evaluate() for completeness.
+
+This two-part evaluation (manual F1 + model metrics) provides a much deeper understanding of model performance, especially given the class imbalance.
